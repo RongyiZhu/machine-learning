@@ -35,9 +35,12 @@ class MLP(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.linear2 = nn.Linear(linear_dim[1], linear_dim[2])
         
+        self.bn1 = nn.BatchNorm1d(linear_dim[1])
+        
     def forward(self, x):
         x = einops.rearrange(x, 'b c h w -> b (c h w)')
         x = self.linear1(x)
+        x = self.bn1(x)
         x = self.relu(x)
         x = self.linear2(x)
         return x

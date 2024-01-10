@@ -19,6 +19,9 @@ wdb = wandb.init(project='machine-learning',
                  )
 
 if __name__ == '__main__':
+    learning_rate = wandb.config.learning_rate
+    epochs = wandb.config.epochs
+    
     train, val = cifar_loader()
     model = MLP(image_size=32, num_classes=100)
     
