@@ -6,6 +6,7 @@ We use Cifar-100 as the training and testing dataset for reimplement the classic
 
 ## Statistics
 | Network | Transformation | Top-1   | Top-5  | Loss   |
+|---------|----------------|---------|--------|--------|
 | MLP 1   | --             | 0.11    | 0.30   | 0.25   |
 | MLP 1   | Normalization  | 18.03%  | 41.37% | 0.2223 |
 | MLP 2   | Normalization  | 19.66%  | 42.72% | 0.2192 |
