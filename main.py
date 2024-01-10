@@ -11,10 +11,15 @@ from MLP import MLP
 from utils import *
 
 torch.multiprocessing.set_sharing_strategy('file_system')
-wdb = wandb.init(project='machine-learning', 
+wdb = wandb.init(project='Linear-perceptron', 
                  config={
-                     "learning_rate": 0.005,
-                     "epochs": 100,
+                    "learning_rate": 0.005,
+                    "epochs": 500,
+                    "batch_size": 2048,
+                    "dataset": "cifar-100",
+                    "model": "MLP-3",
+                    "optimizer": "SGD",
+                    "scheduler": "StepLR",
                  }
                  )
 
@@ -26,9 +31,10 @@ if __name__ == '__main__':
     model = MLP(image_size=32, num_classes=100)
     
     optimizer = optim.SGD(model.parameters(), lr=0.005)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)
     criterion = nn.CrossEntropyLoss()
     
-    for epoch in range(100):
+    for epoch in range(500):
         for i, (x, y) in tqdm.tqdm(enumerate(train)):
             optimizer.zero_grad()
             output = model(x)
