@@ -1,24 +1,44 @@
 import os
 from torch.utils.data import Dataset
 import torchvision.datasets as datasets
+from torch.utils.data import DataLoader
+from torchvision import transforms
 
 import pdb
 
-class ImageNet(Dataset):
-    def __init__(self, data_dir, idx_to_class, transform=None, target_transform=None):
-        self.data_dir = data_dir
-        self.idx_to_class = idx_to_class
-        self.transform = transform
-        
-    def __len__(self):
-        return len(self.idx_to_class)
+
+def imagenet_loader():
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+    ])
+    train = datasets.ImageNet(root='./data/imagenet', split='train', transform=transform)
+    train_loader = DataLoader(train, batch_size=2048, shuffle=True, num_workers=2)
     
-    def __getitem__(self, idx):
-        pass
+    val = datasets.ImageNet(root='./data/imagenet', split='val', transform=transform)
+    val_loader = DataLoader(val,  batch_size=512, shuffle=True, num_workers=2)
     
+    return train_loader, val_loader
+
+def cifar_loader():
+    transform = transforms.Compose([
+        #transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5071, 0.4867, 0.4408], [0.2675, 0.2565, 0.2761]),
+    ])
+    train = datasets.CIFAR100(root='./data/cifar-100', train=True, transform=transform)
+    train_loader = DataLoader(train, batch_size=2048, shuffle=True, num_workers=2)
     
+    val = datasets.CIFAR100(root='./data/cifar-100', train=False, transform=transform)
+    val_loader = DataLoader(val,  batch_size=16, shuffle=True, num_workers=2)
+    
+    return train_loader, val_loader
+
 if __name__ == '__main__':
-    train = datasets.ImageNet(root='./data/imagenet', split='val')
-    #pdb.set_trace()
-    print(len(train))
+    train, val = cifar_loader()
+    pdb.set_trace()
+    for i, (x, y) in enumerate(train):
+        print(x.shape, y.shape)
+        pdb.set_trace()
+        break
     

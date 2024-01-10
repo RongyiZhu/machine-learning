@@ -1,8 +1,4 @@
 import os
-from torch.utils.data import Dataset
-import torchvision.datasets as datasets
-from torch.utils.data import DataLoader
-from torchvision import transforms
 import torch.multiprocessing
 from torch import nn
 import torch.optim as optim
@@ -12,6 +8,7 @@ import tqdm
 import pdb
 
 from MLP import MLP
+from utils import *
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 wdb = wandb.init(project='machine-learning', 
@@ -21,22 +18,9 @@ wdb = wandb.init(project='machine-learning',
                  }
                  )
 
-def imagenet_loader():
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-    ])
-    train = datasets.ImageNet(root='./data/imagenet', split='train', transform=transform)
-    train_loader = DataLoader(train, batch_size=1024, shuffle=True, num_workers=2)
-    
-    val = datasets.ImageNet(root='./data/imagenet', split='val', transform=transform)
-    val_loader = DataLoader(val,  batch_size=16, shuffle=True, num_workers=2)
-    
-    return train_loader, val_loader
-    
 if __name__ == '__main__':
-    train, val = imagenet_loader()
-    model = MLP()
+    train, val = cifar_loader()
+    model = MLP(image_size=32, num_classes=100)
     
     optimizer = optim.SGD(model.parameters(), lr=0.005)
     criterion = nn.CrossEntropyLoss()
@@ -63,6 +47,6 @@ if __name__ == '__main__':
             loss /= len(val.dataset)
             wandb.log({"top1": top1, "top5": top5, "loss": loss})
             
-            torch.save(model.state_dict(), f"./ckpt/MLP/model_{epoch}.pth")
+        torch.save(model.state_dict(), f"./ckpt/cifar/MLP/MLP_8.pth")
     
     

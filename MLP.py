@@ -27,11 +27,13 @@ class Linear(nn.Module):
     
     
 class MLP(nn.Module):
-    def __init__(self):
+    def __init__(self, image_size=224, num_classes=1000):
         super(MLP, self).__init__()
-        self.linear1 = nn.Linear(3*224*224, 4096)
-        self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(4096, 1000)
+        linear_dim = [image_size * image_size * 3, 2048, num_classes]
+        
+        self.linear1 = nn.Linear(linear_dim[0], linear_dim[1])
+        self.relu = nn.ReLU(inplace=True)
+        self.linear2 = nn.Linear(linear_dim[1], linear_dim[2])
         
     def forward(self, x):
         x = einops.rearrange(x, 'b c h w -> b (c h w)')
