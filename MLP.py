@@ -2,6 +2,9 @@ import torch
 import math
 from torch import nn
 import einops
+from utils import get_patches
+import torchstat
+import pdb
 
 
 class Linear(nn.Module):
@@ -27,22 +30,58 @@ class Linear(nn.Module):
     
     
 class MLP(nn.Module):
-    def __init__(self, image_size=224, num_classes=1000):
+    def __init__(self, image_size=224, num_classes=100):
         super(MLP, self).__init__()
-        linear_dim = [image_size * image_size * 3, 2048, num_classes]
+        self.patch_num = 16
         
-        self.linear1 = nn.Linear(linear_dim[0], linear_dim[1])
-        self.relu = nn.ReLU(inplace=True)
-        self.linear2 = nn.Linear(linear_dim[1], linear_dim[2])
+        self.patch_linear = nn.ModuleList()
+        for i in range(self.patch_num):
+            self.patch_linear.append(nn.Sequential(nn.Linear(3*8*8, 64),
+                                                   nn.BatchNorm1d(64),
+                                                   nn.ReLU(),
+                                                   nn.Linear(64, 8)))
+            
+        self.classifier = nn.Sequential(nn.Linear(8*self.patch_num, 512),
+                                        nn.BatchNorm1d(512),
+                                        nn.ReLU(),
+                                        nn.Linear(512, num_classes))
+            
+    def forward(self, x):
+        x = get_patches(x, blocks=4)
+        x = einops.rearrange(x, 'b p c h w -> b p (c h w)')
+        temp = torch.zeros((x.shape[0], self.patch_num, 8), device=x.device)
+        for i in range(self.patch_num):
+            for layer in self.patch_linear:
+                temp[:, i, :] = layer(x[:, i, :])
+        x = einops.rearrange(temp, 'b p c -> b (p c)')
+        x = self.classifier(x)
+        return x
+    
+class MLP3(nn.Module):
+    def __init__(self, num_classes=100):
+        super(MLP3, self).__init__()
+        self.layer_dim = 4096
         
-        self.bn1 = nn.BatchNorm1d(linear_dim[1])
+        self.classifier = nn.Sequential(nn.Linear(3*32*32, self.layer_dim),
+                                        nn.BatchNorm1d(self.layer_dim),
+                                        nn.ReLU(),
+                                        nn.Linear(self.layer_dim, self.layer_dim),
+                                        nn.BatchNorm1d(self.layer_dim),
+                                        nn.ReLU(),
+                                        nn.Linear(self.layer_dim, num_classes))
         
     def forward(self, x):
-        x = einops.rearrange(x, 'b c h w -> b (c h w)')
-        x = self.linear1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.linear2(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
         return x
+    
+
+        
+        
+if __name__ == '__main__':
+    #input = torch.randn(16, 3, 32, 32).to('cuda')
+    model = MLP()
+    torchstat.stat(model, (3, 32, 32))
+    
     
     
